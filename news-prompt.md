@@ -1,12 +1,5 @@
-Az alábbi hírcímek a mai Telex és 444.hu oldalakról származnak.
-Válaszd ki a 8 legfontosabb hírt, és mindegyikhez írj egy rövid, 1-2 mondatos magyar nyelvű összefoglalót.
-Minden összefoglalót kizárólag magyarul írj!
-Visszaadandó formátum – szigorúan JSON lista, semmi más:
+The following headlines come from today’s Telex and 444.hu websites. Select the 8 most important news items, and write a short 1–2 sentence summary in Hungarian for each. Write every summary exclusively in Hungarian. Required output format — strictly a JSON list, nothing else:
 
-[
-  {"index": <eredeti_index>, "summary": "<1-2 mondatos magyar összefoglaló>"},
-  ...
-]
+[ {"index": <original_index>, "summary": "<1–2 sentence Hungarian summary>"}, ... ]
 
-Cikkek:
-{articles}
+Articles: {articles}
