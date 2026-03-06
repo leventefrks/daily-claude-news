@@ -37,7 +37,7 @@ python main.py
 
 The application will:
 
-1. Fetch the latest news from https://wwww.telex.hu & https://www.444.hu
+1. Fetch the latest news from two independent Hungarian news channels: https://www.telex.hu & https://www.444.hu
 2. Summarize and format it using Claude
 3. Send the newsletter to the configured email address
 
