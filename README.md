@@ -1,6 +1,6 @@
 # 📰 Claude Newsroom
 
-An AI-powered newsletter application that uses the Anthropic Claude API to generate content and delivers it via Gmail.
+A minimalistic AI-powered newsletter application that uses the Anthropic Claude API to generate content and delivers it via Gmail.
 
 ## Requirements
 
