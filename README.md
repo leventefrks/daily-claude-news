@@ -1,4 +1,4 @@
-# 📰 Newsroom
+# 📰 Claude Newsroom
 
 An AI-powered newsletter application that uses the Anthropic Claude API to generate content and delivers it via Gmail.
 
@@ -37,7 +37,7 @@ python main.py
 
 The application will:
 
-1. Fetch the latest news
+1. Fetch the latest news from https://wwww.telex.hu & https://www.444.hu
 2. Summarize and format it using Claude
 3. Send the newsletter to the configured email address
 
