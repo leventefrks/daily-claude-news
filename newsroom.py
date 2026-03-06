@@ -18,6 +18,22 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 ANTHROPIC_API_KEY  = os.getenv("ANTHROPIC_API_KEY")
 GMAIL_ADDRESS      = os.getenv("GMAIL_ADDRESS")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+BITLY_TOKEN        = os.getenv("BITLY_TOKEN")
+
+
+def shorten_url(url: str) -> str:
+    """is.gd API – ingyenes, korlátlan URL rövidítés."""
+    try:
+        resp = requests.get(
+            "https://is.gd/create.php",
+            params={"format": "simple", "url": url},
+            timeout=5
+        )
+        if resp.status_code == 200 and resp.text.startswith("https://is.gd/"):
+            return resp.text.strip()
+    except:
+        pass
+    return url
 
 
 def get_telex_news() -> list[dict]:
@@ -82,11 +98,8 @@ def summarize_with_claude(telex: list[dict], news444: list[dict]) -> list[dict]:
             articles_text += f"   {a['desc']}\n"
         articles_text += f"   Link: {a['link']}\n\n"
 
-    prompt_template = open(os.path.join(os.path.dirname(__file__), "prompt.js"), encoding="utf-8").read()
-
-    import re as _re
-    match = _re.search(r'module\.exports\s*=\s*`(.*?)`;', prompt_template, _re.DOTALL)
-    prompt = match.group(1).replace("{articles}", articles_text) if match else articles_text
+    prompt_template = open(os.path.join(os.path.dirname(__file__), "news-prompt.md"), encoding="utf-8").read()
+    prompt = prompt_template.replace("{articles}", articles_text)
 
     message = client.messages.create(
         model="claude-haiku-4-5-20251001",
@@ -112,29 +125,54 @@ def summarize_with_claude(telex: list[dict], news444: list[dict]) -> list[dict]:
 def send_email(articles: list[dict]):
     today = date.today().strftime("%Y. %m. %d.")
 
+    source_colors = {"Telex": "#00A651", "444": "#00A651"}
+    source_text_colors = {"Telex": "#000000", "444": "#000000"}
+    source_bg_colors = {"Telex": "#00A651", "444": "#1A1A1A"}
+
     items_html = ""
-    for i, a in enumerate(articles, 1):
-        link_html = f'<a href="{a["link"]}" style="color:#1a73e8;">{a["link"]}</a>' if a["link"] else ""
+    for a in articles:
+        color = source_colors.get(a["source"], "#00A651")
+        badge_bg = source_bg_colors.get(a["source"], "#00A651")
+        arrow_bg = "#00A651" if a["source"] == "Telex" else "#1A1A1A"
+        link_html = f'<a href="{a["link"]}" style="display:inline-block; margin-top:10px; font-size:12px; color:#ffffff; background:{arrow_bg}; padding:4px 12px; border-radius:3px; text-decoration:none; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Tovább olvasom</a>' if a["link"] else ""
         items_html += f"""
-        <div style="margin-bottom:20px; padding:12px; border-left:4px solid #1a73e8; background:#f9f9f9;">
-            <div style="font-size:13px; color:#888; margin-bottom:4px;">{i}. [{a['source']}]</div>
-            <div style="font-weight:bold; font-size:15px; margin-bottom:6px;">{a['title']}</div>
-            <div style="font-size:14px; color:#333; margin-bottom:6px;">{a['summary']}</div>
-            <div style="font-size:12px;">{link_html}</div>
+        <div style="margin-bottom:0; padding:24px 28px; border-bottom:1px solid #e8e8e8;">
+            <div style="margin-bottom:8px;">
+                <span style="font-size:11px; font-weight:700; color:#fff; background:{badge_bg}; padding:2px 8px; border-radius:2px; text-transform:uppercase; letter-spacing:0.8px;">{a['source']}</span>
+            </div>
+            <div style="font-family:Georgia, serif; font-size:18px; font-weight:700; color:#1a1a1a; line-height:1.3; margin-bottom:10px;">{a['title']}</div>
+            <div style="font-size:14px; color:#555; line-height:1.6;">{a['summary']}</div>
+            {link_html}
         </div>
         """
 
-    html_body = f"""
-    <html><body style="font-family:Arial; max-width:650px; margin:auto; padding:20px;">
-    <h2 style="color:#333;">📰 Daily News Summary – {today}</h2>
-    <hr style="margin-bottom:20px;">
-    {items_html}
-    <hr>
-    <small style="color:#999;">Source: telex.hu | 444.hu</small>
-    </body></html>
-    """
+    html_body = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0; padding:0; background:#f0f0f0; font-family:Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0; padding:24px 0;">
+    <tr><td align="center">
+      <table width="620" cellpadding="0" cellspacing="0" style="background:#fff; border-radius:4px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.1);">
 
-    text_lines = [f"📰 Daily News Summary – {today}\n"]
+        <!-- NEWS ITEMS -->
+        <tr><td>{items_html}</td></tr>
+
+        <!-- FOOTER -->
+        <tr>
+          <td style="background:#f8f8f8; padding:16px 28px; border-top:1px solid #e8e8e8;">
+            <div style="font-size:11px; color:#999; text-align:center;">
+              {today} · <a href="https://telex.hu" style="color:#999;">telex.hu</a> · <a href="https://444.hu" style="color:#999;">444.hu</a>
+            </div>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+    text_lines = [f"Magyar Hírek – {today}\n"]
     for i, a in enumerate(articles, 1):
         text_lines.append(f"{i}. [{a['source']}] {a['title']}")
         text_lines.append(f"   {a['summary']}")
@@ -144,7 +182,7 @@ def send_email(articles: list[dict]):
     text_body = "\n".join(text_lines)
 
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"📰 Daily News Summary – {today}"
+    msg["Subject"] = f"📰 Daily News – {today}"
     msg["From"]    = GMAIL_ADDRESS
     msg["To"]      = GMAIL_ADDRESS
     msg.attach(MIMEText(text_body, "plain", "utf-8"))
@@ -171,6 +209,9 @@ def main():
         print(f"   {a['link']}\n")
 
     print("📧 Sending email...")
+    for a in articles:
+        if a["link"]:
+            a["link"] = shorten_url(a["link"])
     send_email(articles)
 
 
