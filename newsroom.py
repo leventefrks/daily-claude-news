@@ -18,7 +18,6 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 ANTHROPIC_API_KEY  = os.getenv("ANTHROPIC_API_KEY")
 GMAIL_ADDRESS      = os.getenv("GMAIL_ADDRESS")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
-BITLY_TOKEN        = os.getenv("BITLY_TOKEN")
 
 
 def shorten_url(url: str) -> str:
