@@ -21,7 +21,7 @@ GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
 
 
 def shorten_url(url: str) -> str:
-    """is.gd API – ingyenes, korlátlan URL rövidítés."""
+
     try:
         resp = requests.get(
             "https://is.gd/create.php",
